@@ -15,7 +15,6 @@ def flush():
 # Make state array
 HEAT_GRID = [[20.0 for x in range(MAX_X)] for y in range(MAX_Y)]
 
-#@puresignal
 def initialize(grid):
   """Set Initial Conditions for State Array"""
   for y in range(30, 92):
@@ -28,7 +27,7 @@ def array_sum(array):
   for elem in array:
     out_sum += float(elem)
   return out_sum
-#@puresignal
+
 def slave_process(row, below_row, above_row):
   """Main worker process"""
   if below_row == [] or above_row == []:
@@ -54,7 +53,6 @@ def slave_process(row, below_row, above_row):
 
     return new_row
 
-#@puresignal
 def result_printer(grid):
   print("Finished computation")
   f = open(OUTPUT_FILE_NAME, 'w')
@@ -63,7 +61,6 @@ def result_printer(grid):
     for x in y:
       f.write("%.6f\n"%x)
 
-#@puresignal
 def iterate(iteration, grid):
   print("Started iteration", iteration)
   # Check if finished
@@ -76,7 +73,6 @@ def iterate(iteration, grid):
   slaves = []
   #Spawn slave processes with old grid state
   for y in range(MAX_Y):
-    # print("looping")
     above_row = []
     below_row = []
     row = grid[y]
@@ -87,14 +83,6 @@ def iterate(iteration, grid):
 
     slave = puresignal(slave_process)(row, below_row, above_row)
     slaves.append(slave)
-  
-  # slaves = []
-  # #Spawn slave processes with old grid state
-  # for y in range(MAX_Y):
-  #   for x in range(MAX_X):
-  #     slave = puresignal(slave_process)(grid, x, y)
-  #     slaves.append(slave)
-  
   print("Launched workers. Waiting on results")
   # Update state array
   for i in range(len(slaves)):
