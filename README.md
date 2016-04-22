@@ -19,6 +19,10 @@ Once the dependencies are installed, it should be a matter of executing
 
 # Features/Bugs
 
+Our program's output differs from the C program output. We have checked our
+program for bugs, to the best of our abilities. The individual differences are
+quite small, so the differences could possibly be a result of rounding error.
+
 ## Part One
 
 Part One uses the join-python libary, which can be found here

@@ -42,7 +42,11 @@ def slave_process(channel, row, below_row, above_row):
         neighbors.append(row[i+1])
         neighbors.append(below_row[i])
         neighbors.append(above_row[i])
-        new_val = sum(neighbors)/len(neighbors)
+        assert(len(neighbors) == 4)
+        new_val = 0.0
+        for elem in neighbors:
+          new_val += float(elem)
+        new_val /= 4.0
         new_row.append(new_val)
       else:
         #if the cell is on an edge its value stays
@@ -57,7 +61,7 @@ def result_printer(grid):
   f.write("%d %d\n" % (MAX_X, MAX_Y))
   for x in range(MAX_X):
     for y in range(MAX_Y):
-      f.write("%.6f\n" % grid[y][x])
+      f.write("%.6f\n" % grid[x][y])
 
 def iterate(gws, iteration, max_iterations, grid, max_y_arg, max_x_arg):
   while iteration < max_iterations:

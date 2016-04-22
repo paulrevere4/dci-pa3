@@ -32,6 +32,8 @@ def slave_process(row, below_row, above_row):
   """Main worker process"""
   new_row = []
 
+  assert(len(row) == MAX_X)
+
   for x in range(len(row)):
     if x > 0 and x < len(row)-1:
       #check if the cell is inside the edges, average its neighbors
@@ -40,7 +42,9 @@ def slave_process(row, below_row, above_row):
       neighbors.append(row[x+1]) # Right
       neighbors.append(below_row[x]) # Bottom
       neighbors.append(above_row[x]) # Top
-      new_val = array_sum(neighbors)/float(len(neighbors))
+      a_s = array_sum(neighbors)
+      assert(len(neighbors) == 4)
+      new_val = a_s / 4.0
       new_row.append(new_val)
     else:
       #if the cell is on an edge its value stays
@@ -54,7 +58,7 @@ def result_printer(grid):
   f.write("%d %d\n" % (MAX_X, MAX_Y))
   for x in range(MAX_X):
     for y in range(MAX_Y):
-      f.write("%.6f\n" % grid[y][x])
+      f.write("%.6f\n" % grid[x][y])
 
 def iterate(iteration, grid):
   print("Started iteration", iteration)
@@ -67,11 +71,7 @@ def iterate(iteration, grid):
   slaves = []
 
   #Spawn slave processes with old grid state
-  for y in range(MAX_Y):
-    if y < 1 or y >= MAX_Y -1:
-      # Skip edge rows
-      continue
-
+  for y in range(1, MAX_Y - 1):
     row = grid[y]
     above_row = grid[y-1]
     below_row = grid[y+1]
@@ -79,11 +79,12 @@ def iterate(iteration, grid):
     slave = puresignal(slave_process)(row, below_row, above_row)
     slaves.append(slave)
   print("Launched workers. Waiting on results")
+  assert(len(slaves) == MAX_Y - 2 ) # Skip top and bottom rows
   # Update state array
   for i in range(len(slaves)):
     slave = slaves[i]
     new_row = slave.join()
-    grid[i] = new_row
+    grid[i+1] = new_row
   # Spawn next iteration
   print("Finished iteration ", iteration)
   iterator = puresignal(iterate)(iteration + 1, grid)
