@@ -19,10 +19,10 @@ def initialize(grid):
   """Set Initial Conditions for State Array"""
   for y in range(30, 92):
     grid[y][0] = 100.0
-
   return grid
 
 def array_sum(array):
+  """Do floating point summation of array"""
   out_sum = 0.0
   for elem in array:
     out_sum += float(elem)
@@ -30,28 +30,23 @@ def array_sum(array):
 
 def slave_process(row, below_row, above_row):
   """Main worker process"""
-  if below_row == [] or above_row == []:
-    # row is on an edge, Edge squares remain in steady state
-    return row
+  new_row = []
 
-  else:
-    new_row = []
+  for x in range(len(row)):
+    if x > 0 and x < len(row)-1:
+      #check if the cell is inside the edges, average its neighbors
+      neighbors = []
+      neighbors.append(row[x-1])
+      neighbors.append(row[x+1])
+      neighbors.append(below_row[x])
+      neighbors.append(above_row[x])
+      new_val = array_sum(neighbors)/float(len(neighbors))
+      new_row.append(new_val)
+    else:
+      #if the cell is on an edge its value stays
+      new_row.append(row[x])
 
-    for i in range(len(row)):
-      if i > 0 and i < len(row)-1:
-        #check if the cell is inside the edges, average its neighbors
-        neighbors = []
-        neighbors.append(row[i-1])
-        neighbors.append(row[i+1])
-        neighbors.append(below_row[i])
-        neighbors.append(above_row[i])
-        new_val = array_sum(neighbors)/float(len(neighbors))
-        new_row.append(new_val)
-      else:
-        #if the cell is on an edge its value stays
-        new_row.append(row[i])
-
-    return new_row
+  return new_row
 
 def result_printer(grid):
   print("Finished computation")
@@ -69,17 +64,17 @@ def iterate(iteration, grid):
     puresignal(result_printer)(grid)
     return grid
 
-
   slaves = []
+
   #Spawn slave processes with old grid state
   for y in range(MAX_Y):
-    above_row = []
-    below_row = []
+    if y < 1 or y >= MAX_Y -1:
+      # Skip edge rows
+      continue
+
     row = grid[y]
-    if y > 0:
-      above_row = grid[y-1]
-    if y < MAX_Y-1:
-      below_row = grid[y+1]
+    above_row = grid[y-1]
+    below_row = grid[y+1]
 
     slave = puresignal(slave_process)(row, below_row, above_row)
     slaves.append(slave)
