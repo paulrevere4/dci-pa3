@@ -2,8 +2,8 @@
 import execnet
 OUTPUT_FILE_NAME = "heat-seq.map"
 
-MAX_X = 122
-MAX_Y = 122
+MAX_X = 12
+MAX_Y = 12
 #NUM_ITERATIONS = 1024
 NUM_ITERATIONS = 1
 
@@ -19,7 +19,7 @@ HEAT_GRID = [[20.0 for x in range(MAX_X)] for y in range(MAX_Y)]
 #@puresignal
 def initialize(channel, grid):
   """Set Initial Conditions for State Array"""
-  for y in range(30, 92):
+  for y in range(3, 9):
     grid[y][0] = 100.0
 
   channel.send(grid)
@@ -29,7 +29,7 @@ def slave_process(channel, old_grid):
   """Main worker process"""
   x = channel.receive()
   y = channel.receive()
-  if x == 0 or y == 0 or x == MAX_X - 1 or y == MAX_Y - 1:
+  if x == 0 or y == 0 or x == len(old_grid[0]) - 1 or y == len(old_grid) - 1:
     # Edge squares remain in steady state
     channel.send(old_grid[y][x])
 
@@ -83,7 +83,7 @@ def iterate(gw, iteration, max_iterations, grid, max_y_arg, max_x_arg):
       print ("IAMHERE-looping")
       # slave = puresignal(slave_process)(grid, x, y) #TODO: Change this to remote_exec
       slave = gw.remote_exec(slave_process, old_grid=grid)
-      print ("IAMHERE-looping2")
+      # print ("IAMHERE-looping2")
       slave.send(x)
       slave.send(y)
       slaves.append(slave)
@@ -97,7 +97,7 @@ def iterate(gw, iteration, max_iterations, grid, max_y_arg, max_x_arg):
     grid[y][x] = val
 
   # Run next iteration
-  return iterate(iteration + 1, max_iterations, grid, max_y_arg, max_x_arg)
+  return iterate(gw, iteration + 1, max_iterations, grid, max_y_arg, max_x_arg)
 
 if __name__ == "__main__":
   import time
