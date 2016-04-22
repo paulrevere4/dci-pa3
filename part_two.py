@@ -79,7 +79,7 @@ def iterate(gws, iteration, max_iterations, grid, max_y_arg, max_x_arg):
       if y < max_y_arg-1:
         below_row = grid[y+1]
 
-      slave = gw.remote_exec(slave_process, row=row, below_row=below_row, above_row=below_row)
+      slave = gw.remote_exec(slave_process, row=row, below_row=below_row, above_row=above_row)
       slaves.append(slave)
 
     print("Launched workers. Waiting on results")
