@@ -103,7 +103,8 @@ if __name__ == "__main__":
   import time
   gws = []
   for i in range(NUM_MACHINES):
-    gws.append(execnet.makegateway("ssh=localhost"))
+    #gws.append(execnet.makegateway("ssh=localhost"))
+    gws.append(execnet.makegateway())
   #TODO: convert pursignal calls to remote_exec calls, return statements become channel.send
   # Spawn/Join on intializer
   #HEAT_GRID = (puresignal(initialize)(HEAT_GRID)).join()
