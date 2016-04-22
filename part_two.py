@@ -5,8 +5,8 @@ OUTPUT_FILE_NAME = "heat-seq.map"
 MAX_X = 120
 MAX_Y = 120
 #NUM_ITERATIONS = 1024
-NUM_ITERATIONS = 1
-NUM_MACHINES = 200
+NUM_ITERATIONS = 2
+NUM_MACHINES = 20
 
 from join import *
 import sys
@@ -20,42 +20,36 @@ HEAT_GRID = [[20.0 for x in range(MAX_X)] for y in range(MAX_Y)]
 #@puresignal
 def initialize(channel, grid):
   """Set Initial Conditions for State Array"""
-  for y in range(3, 9):
+  for y in range(30, 89):
     grid[y][0] = 100.0
 
   channel.send(grid)
 
 #@puresignal
-def slave_process(channel, old_grid, x, y):
+def slave_process(channel, row, below_row, above_row):
   """Main worker process"""
-  #(x, y) = channel.receive()
-  if x == 0 or y == 0 or x == len(old_grid[0]) - 1 or y == len(old_grid) - 1:
-    # Edge squares remain in steady state
-    channel.send(old_grid[y][x])
+  if below_row == [] or above_row == []:
+    # row is on an edge, Edge squares remain in steady state
+    channel.send(row)
 
-  # Get neighbor values
-  neighbors = [
-                old_grid[y-1][x-1], # Top left
-                old_grid[y-1][x], # Up one
-                old_grid[y][x-1], # Left one
-                old_grid[y][x] #Own old value
-              ]
+  else:
+    new_row = []
 
-  y_height_okay = False
-  if (y+1) < len(old_grid):
-    y_height_okay = True
-    neighbors.append(old_grid[y+1][x]) # Down one
-  if ((x+1) < len(old_grid[y])):
-    neighbors.append(old_grid[y][x+1]) # Right one
-    if y_height_okay:
-      neighbors.append(old_grid[y+1][x+1]) # Bottom Right
-      neighbors.append(old_grid[y+1][x-1]) # Bottom left
-      neighbors.append(old_grid[y-1][x+1]) # Top Right
+    for i in range(len(row)):
+      if i > 0 and i < len(row)-1:
+        #check if the cell is inside the edges, average its neighbors
+        neighbors = []
+        neighbors.append(row[i-1])
+        neighbors.append(row[i+1])
+        neighbors.append(below_row[i])
+        neighbors.append(above_row[i])
+        new_val = sum(neighbors)/len(neighbors)
+        new_row.append(new_val)
+      else:
+        #if the cell is on an edge its value stays
+        new_row.append(row[i])
 
-  # Calculate avg of neighbors and self
-  new_val = sum(neighbors)/len(neighbors)
-
-  channel.send(new_val)
+    channel.send(new_row)
 
 #@puresignal
 def result_printer(grid):
@@ -64,38 +58,46 @@ def result_printer(grid):
   f.write("%d %d\n" % (MAX_X, MAX_Y))
   for y in grid:
     for x in y:
-      f.write("%d\n" % (x))
+      out_str = "%d"%x
+      f.write(out_str.ljust(4, ' '))
+    f.write("\n")
 
 def iterate(gws, iteration, max_iterations, grid, max_y_arg, max_x_arg):
   while iteration < max_iterations:
     gw = gws[iteration % NUM_MACHINES]
     print("Started iteration", iteration)
-    # Check if finished
-    if iteration == max_iterations:
-      print("DONE")
-      result_printer(grid)
-      # gw.remote_exec(result_printer, grid=HEAT_GRID) #TODO: change to remote_exec
-      return grid
-    print ("IAMHERE")
+    
+
     slaves = []
-    slaves_cords = []
     #Spawn slave processes with old grid state
     for y in range(max_y_arg):
-      for x in range(max_x_arg):
-        print ("IAMHERE-looping")
-        # slave = puresignal(slave_process)(grid, x, y) #TODO: Change this to remote_exec
-        slave = gw.remote_exec(slave_process, old_grid=grid, x=x, y=y)
-        slaves.append(slave)
-        slaves_cords.append((x, y))
+      # print("looping")
+      above_row = []
+      below_row = []
+      row = grid[y]
+      if y > 0:
+        above_row = grid[y-1]
+      if y < max_y_arg-1:
+        below_row = grid[y+1]
+
+      slave = gw.remote_exec(slave_process, row=row, below_row=below_row, above_row=below_row)
+      slaves.append(slave)
+
     print("Launched workers. Waiting on results")
     # Update state array
     for i in range(len(slaves)):
       slave = slaves[i]
-      x, y = slaves_cords[i]
-      val = slave.receive() #TODO: CHange this to receive
-      grid[y][x] = val
+      new_row = slave.receive()
+      grid[i] = new_row
 
     iteration += 1
+
+  # Check if finished
+  print("DONE")
+  result_printer(grid)
+  # gw.remote_exec(result_printer, grid=HEAT_GRID) #TODO: change to remote_exec
+  return grid
+  # print ("IAMHERE")
 
 if __name__ == "__main__":
   import time
