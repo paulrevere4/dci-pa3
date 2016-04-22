@@ -25,11 +25,13 @@ def initialize(channel, grid):
   channel.send(grid)
 
 #@puresignal
-def slave_process(channel, old_grid, x, y):
+def slave_process(channel, old_grid):
   """Main worker process"""
+  x = channel.receive()
+  y = channel.receive()
   if x == 0 or y == 0 or x == MAX_X - 1 or y == MAX_Y - 1:
     # Edge squares remain in steady state
-    return (x,y, old_grid[y][x])
+    channel.send(old_grid[y][x])
 
   # Get neighbor values
   neighbors = [
@@ -53,8 +55,7 @@ def slave_process(channel, old_grid, x, y):
   # Calculate avg of neighbors and self
   new_val = sum(neighbors)/len(neighbors)
 
-  # Report assigned coordinates and new value
-  return (x,y, new_val)
+  channel.send(new_val)
 
 #@puresignal
 def result_printer(grid):
@@ -65,29 +66,38 @@ def result_printer(grid):
     for x in y:
       f.write("%d\n" % (x))
 
-def iterate(gw, iteration, grid):
+def iterate(gw, iteration, max_iterations, grid, max_y_arg, max_x_arg):
   print("Started iteration", iteration)
   # Check if finished
-  if iteration == NUM_ITERATIONS:
+  if iteration == max_iterations:
     print("DONE")
-    puresignal(result_printer)(grid) #TODO: change to remote_exec
+    result_printer(grid)
+    # gw.remote_exec(result_printer, grid=HEAT_GRID) #TODO: change to remote_exec
     return grid
-
+  print ("IAMHERE")
   slaves = []
+  slaves_cords = []
   #Spawn slave processes with old grid state
-  for y in range(MAX_Y):
-    for x in range(MAX_X):
-      slave = puresignal(slave_process)(grid, x, y) #TODO: Change this to remote_exec
+  for y in range(max_y_arg):
+    for x in range(max_x_arg):
+      print ("IAMHERE-looping")
+      # slave = puresignal(slave_process)(grid, x, y) #TODO: Change this to remote_exec
+      slave = gw.remote_exec(slave_process, old_grid=grid)
+      print ("IAMHERE-looping2")
+      slave.send(x)
+      slave.send(y)
       slaves.append(slave)
+      slaves_cords.append((x, y))
   print("Launched workers. Waiting on results")
   # Update state array
   for i in range(len(slaves)):
     slave = slaves[i]
-    (x,y, val) = slave.join() #TODO: CHange this to receive
+    x, y = slaves_cords[i]
+    val = slave.receive() #TODO: CHange this to receive
     grid[y][x] = val
 
   # Run next iteration
-  iterate(iteration + 1, grid)
+  return iterate(iteration + 1, max_iterations, grid, max_y_arg, max_x_arg)
 
 if __name__ == "__main__":
   import time
@@ -99,4 +109,4 @@ if __name__ == "__main__":
   print("Initialized heat grid")
   flush()
   # Spawn calculator
-  iterate(gw, 0, HEAT_GRID)
+  iterate(gw, 0, NUM_ITERATIONS, HEAT_GRID, MAX_Y, MAX_X)
