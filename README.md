@@ -48,3 +48,17 @@ threading instead of multiprocessing under the hood).
 
 # Analysis of Distributed Computation versus Sequential
 #TODO: "Write an analysis for when you expect a distributed iterative computation to have higher performance than a sequential one (describe assumptions in your analysis: e.g., homogeneous machines and network, data partitioning scheme, and/or computation to communication ratio)."
+
+We expect that a distributed computation will have higher performance than a 
+sequential solution when we have a large number of machines that can communicate
+with each other easily with little chance for faults. Computing clusters and
+data centers both have environments similar to this. We also expect that the
+distributed solution will be more efficient when the amount of data passed in
+messages between machines can be kept to a minimum. In our example the only data
+that is sent to the workers is in the form of three arrays that are the width of
+the grid and one array of the same size is sent back. Finally, we expect higher
+performance with distributed solutions on highly computational tasks, ones where
+there is far more computation than communication for the workers. The task in
+this assignment did not require much computation so in the end the cost of
+communication was higher than the benefit of distribution.
+
