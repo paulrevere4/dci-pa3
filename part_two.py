@@ -6,7 +6,7 @@ MAX_X = 120
 MAX_Y = 120
 #NUM_ITERATIONS = 1024
 NUM_ITERATIONS = 1
-NUM_MACHINES = 20
+NUM_MACHINES = 200
 
 from join import *
 import sys
@@ -26,9 +26,9 @@ def initialize(channel, grid):
   channel.send(grid)
 
 #@puresignal
-def slave_process(channel, old_grid):
+def slave_process(channel, old_grid, x, y):
   """Main worker process"""
-  (x, y) = channel.receive()
+  #(x, y) = channel.receive()
   if x == 0 or y == 0 or x == len(old_grid[0]) - 1 or y == len(old_grid) - 1:
     # Edge squares remain in steady state
     channel.send(old_grid[y][x])
@@ -84,9 +84,7 @@ def iterate(gws, iteration, max_iterations, grid, max_y_arg, max_x_arg):
       for x in range(max_x_arg):
         print ("IAMHERE-looping")
         # slave = puresignal(slave_process)(grid, x, y) #TODO: Change this to remote_exec
-        slave = gw.remote_exec(slave_process, old_grid=grid)
-        # print ("IAMHERE-looping2")
-        slave.send((x, y))
+        slave = gw.remote_exec(slave_process, old_grid=grid, x=x, y=y)
         slaves.append(slave)
         slaves_cords.append((x, y))
     print("Launched workers. Waiting on results")
