@@ -70,7 +70,6 @@ def iterate(gws, iteration, max_iterations, grid, max_y_arg, max_x_arg):
     slaves = []
     #Spawn slave processes with old grid state
     for y in range(max_y_arg):
-      # print("looping")
       above_row = []
       below_row = []
       row = grid[y]
