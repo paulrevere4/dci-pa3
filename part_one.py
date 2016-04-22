@@ -36,10 +36,10 @@ def slave_process(row, below_row, above_row):
     if x > 0 and x < len(row)-1:
       #check if the cell is inside the edges, average its neighbors
       neighbors = []
-      neighbors.append(row[x-1])
-      neighbors.append(row[x+1])
-      neighbors.append(below_row[x])
-      neighbors.append(above_row[x])
+      neighbors.append(row[x-1]) # Left
+      neighbors.append(row[x+1]) # Right
+      neighbors.append(below_row[x]) # Bottom
+      neighbors.append(above_row[x]) # Top
       new_val = array_sum(neighbors)/float(len(neighbors))
       new_row.append(new_val)
     else:
