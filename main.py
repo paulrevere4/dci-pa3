@@ -84,7 +84,7 @@ def iterate(iteration, grid):
   # Update state array
   for i in range(len(slaves)):
     slave = slaves[i]
-    (x,y, val) = slave.join().rc
+    (x,y, val) = slave.join()
     grid[y][x] = val
   # Spawn next iteration
   iterator = puresignal(iterate)(iteration + 1, grid)
@@ -94,7 +94,7 @@ def iterate(iteration, grid):
 if __name__ == "__main__":
   import time
   # Spawn/Join on intializer
-  HEAT_GRID = (puresignal(initialize)(HEAT_GRID)).join().rc
+  HEAT_GRID = (puresignal(initialize)(HEAT_GRID)).join()
   print("Initialized heat grid")
   flush()
   # Spawn calculator
