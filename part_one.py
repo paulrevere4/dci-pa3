@@ -57,9 +57,9 @@ def result_printer(grid):
   print("Finished computation")
   f = open(OUTPUT_FILE_NAME, 'w')
   f.write("%d %d\n" % (MAX_X, MAX_Y))
-  for y in grid:
-    for x in y:
-      f.write("%.6f\n"%x)
+  for x in range(MAX_X):
+    for y in range(MAX_Y):
+      f.write("%.6f\n" % grid[y][x])
 
 def iterate(iteration, grid):
   print("Started iteration", iteration)
