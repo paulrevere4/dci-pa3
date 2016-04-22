@@ -65,7 +65,7 @@ def iterate(gws, iteration, max_iterations, grid, max_y_arg, max_x_arg):
   while iteration < max_iterations:
     gw = gws[iteration % NUM_MACHINES]
     print("Started iteration", iteration)
-    
+
 
     slaves = []
     #Spawn slave processes with old grid state
@@ -94,9 +94,7 @@ def iterate(gws, iteration, max_iterations, grid, max_y_arg, max_x_arg):
   # Check if finished
   print("DONE")
   result_printer(grid)
-  # gw.remote_exec(result_printer, grid=HEAT_GRID) #TODO: change to remote_exec
   return grid
-  # print ("IAMHERE")
 
 if __name__ == "__main__":
   import time
@@ -104,9 +102,7 @@ if __name__ == "__main__":
   for i in range(NUM_MACHINES):
     #gws.append(execnet.makegateway("ssh=localhost"))
     gws.append(execnet.makegateway())
-  #TODO: convert pursignal calls to remote_exec calls, return statements become channel.send
   # Spawn/Join on intializer
-  #HEAT_GRID = (puresignal(initialize)(HEAT_GRID)).join()
   HEAT_GRID = (gws[0].remote_exec(initialize, grid=HEAT_GRID)).receive()
   print("Initialized heat grid")
   flush()
