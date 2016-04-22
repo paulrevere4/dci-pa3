@@ -55,11 +55,9 @@ def result_printer(grid):
   print("Finished computation")
   f = open(OUTPUT_FILE_NAME, 'w')
   f.write("%d %d\n" % (MAX_X, MAX_Y))
-  for y in grid:
-    for x in y:
-      out_str = "%d"%x
-      f.write(out_str.ljust(4, ' '))
-    f.write("\n")
+  for x in range(MAX_X):
+    for y in range(MAX_Y):
+      f.write("%.6f\n" % grid[y][x])
 
 def iterate(gws, iteration, max_iterations, grid, max_y_arg, max_x_arg):
   while iteration < max_iterations:
