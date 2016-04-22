@@ -4,8 +4,7 @@ OUTPUT_FILE_NAME = "heat-seq.map"
 
 MAX_X = 122
 MAX_Y = 122
-#NUM_ITERATIONS = 1024
-NUM_ITERATIONS = 300
+NUM_ITERATIONS = 1024
 
 from join import *
 import sys
