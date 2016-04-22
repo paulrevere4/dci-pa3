@@ -5,7 +5,7 @@ OUTPUT_FILE_NAME = "heat-seq.map"
 MAX_X = 122
 MAX_Y = 122
 #NUM_ITERATIONS = 1024
-NUM_ITERATIONS = 1
+NUM_ITERATIONS = 300
 
 from join import *
 import sys
@@ -25,36 +25,58 @@ def initialize(grid):
   return grid
 
 #@puresignal
-def slave_process(old_grid, x, y):
+def slave_process(row, below_row, above_row):
   """Main worker process"""
-  if x == 0 or y == 0 or x == MAX_X - 1 or y == MAX_Y - 1:
-    # Edge squares remain in steady state
-    return (x,y, old_grid[y][x])
+  # if x == 0 or y == 0 or x == MAX_X - 1 or y == MAX_Y - 1:
+  #   # Edge squares remain in steady state
+  #   return (x,y, old_grid[y][x])
 
-  # Get neighbor values
-  neighbors = [
-                old_grid[y-1][x-1], # Top left
-                old_grid[y-1][x], # Up one
-                old_grid[y][x-1], # Left one
-                old_grid[y][x] #Own old value
-              ]
+  # # Get neighbor values
+  # neighbors = [
+  #               old_grid[y-1][x-1], # Top left
+  #               old_grid[y-1][x], # Up one
+  #               old_grid[y][x-1], # Left one
+  #               old_grid[y][x] #Own old value
+  #             ]
 
-  y_height_okay = False
-  if (y+1) < len(old_grid):
-    y_height_okay = True
-    neighbors.append(old_grid[y+1][x]) # Down one
-  if ((x+1) < len(old_grid[y])):
-    neighbors.append(old_grid[y][x+1]) # Right one
-    if y_height_okay:
-      neighbors.append(old_grid[y+1][x+1]) # Bottom Right
-      neighbors.append(old_grid[y+1][x-1]) # Bottom left
-      neighbors.append(old_grid[y-1][x+1]) # Top Right
+  # y_height_okay = False
+  # if (y+1) < len(old_grid):
+  #   y_height_okay = True
+  #   neighbors.append(old_grid[y+1][x]) # Down one
+  # if ((x+1) < len(old_grid[y])):
+  #   neighbors.append(old_grid[y][x+1]) # Right one
+  #   if y_height_okay:
+  #     neighbors.append(old_grid[y+1][x+1]) # Bottom Right
+  #     neighbors.append(old_grid[y+1][x-1]) # Bottom left
+  #     neighbors.append(old_grid[y-1][x+1]) # Top Right
 
-  # Calculate avg of neighbors and self
-  new_val = sum(neighbors)/len(neighbors)
+  # # Calculate avg of neighbors and self
+  # new_val = sum(neighbors)/len(neighbors)
 
-  # Report assigned coordinates and new value
-  return (x,y, new_val)
+  # # Report assigned coordinates and new value
+  # return (x,y, new_val)
+  if below_row == [] or above_row == []:
+    # row is on an edge, Edge squares remain in steady state
+    return row
+
+  else:
+    new_row = []
+
+    for i in range(len(row)):
+      if i > 0 and i < len(row)-1:
+        #check if the cell is inside the edges, average its neighbors
+        neighbors = []
+        neighbors.append(row[i-1])
+        neighbors.append(row[i+1])
+        neighbors.append(below_row[i])
+        neighbors.append(above_row[i])
+        new_val = sum(neighbors)/len(neighbors)
+        new_row.append(new_val)
+      else:
+        #if the cell is on an edge its value stays
+        new_row.append(row[i])
+
+    return new_row
 
 #@puresignal
 def result_printer(grid):
@@ -63,7 +85,9 @@ def result_printer(grid):
   f.write("%d %d\n" % (MAX_X, MAX_Y))
   for y in grid:
     for x in y:
-      f.write("%d\n" % (x))
+      out_str = "%d"%x
+      f.write(out_str.ljust(4, ' '))
+    f.write("\n")
 
 #@puresignal
 def iterate(iteration, grid):
@@ -74,21 +98,38 @@ def iterate(iteration, grid):
     puresignal(result_printer)(grid)
     return grid
 
+
   slaves = []
   #Spawn slave processes with old grid state
   for y in range(MAX_Y):
-    for x in range(MAX_X):
-      slave = puresignal(slave_process)(grid, x, y)
-      slaves.append(slave)
+    # print("looping")
+    above_row = []
+    below_row = []
+    row = grid[y]
+    if y > 0:
+      above_row = grid[y-1]
+    if y < MAX_Y-1:
+      below_row = grid[y+1]
+
+    slave = puresignal(slave_process)(row, below_row, above_row)
+    slaves.append(slave)
+  
+  # slaves = []
+  # #Spawn slave processes with old grid state
+  # for y in range(MAX_Y):
+  #   for x in range(MAX_X):
+  #     slave = puresignal(slave_process)(grid, x, y)
+  #     slaves.append(slave)
+  
   print("Launched workers. Waiting on results")
   # Update state array
   for i in range(len(slaves)):
     slave = slaves[i]
-    (x,y, val) = slave.join()
-    grid[y][x] = val
+    new_row = slave.join()
+    grid[i] = new_row
   # Spawn next iteration
-  iterator = puresignal(iterate)(iteration + 1, grid)
   print("Finished iteration ", iteration)
+  iterator = puresignal(iterate)(iteration + 1, grid)
   return iterator.join()
 
 if __name__ == "__main__":
