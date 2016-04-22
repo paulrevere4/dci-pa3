@@ -28,6 +28,7 @@ def array_sum(array):
   for elem in array:
     out_sum += float(elem)
   return out_sum
+
 #@puresignal
 def slave_process(row, below_row, above_row):
   """Main worker process"""
@@ -87,13 +88,7 @@ def iterate(iteration, grid):
 
     slave = puresignal(slave_process)(row, below_row, above_row)
     slaves.append(slave)
-  
-  # slaves = []
-  # #Spawn slave processes with old grid state
-  # for y in range(MAX_Y):
-  #   for x in range(MAX_X):
-  #     slave = puresignal(slave_process)(grid, x, y)
-  #     slaves.append(slave)
+
   
   print("Launched workers. Waiting on results")
   # Update state array

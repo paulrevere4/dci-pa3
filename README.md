@@ -30,9 +30,10 @@ Part Two does not use the join python library, as that library does not support
 distributed join calculus operations. Instead we use the execnet library, which
 provides roughly equivalent functionality (asynchronous, distributed, channel-
 based communications, spawning of parallel processes, checking of function arg-
-uments against function prototypes, joining with processes). The main difference
-is that the child funcctions do not use return statements, but instead
-explicitly call channel send functions.
+uments against function prototypes, joining with processes). We have essentially
+emulated the Join Calculus through execnet. The main difference is that the
+child funcctions do not use return statements, but instead explicitly call
+channel send functions.
 
 Part Two can spawn processes on remote machines by setting up SSH sessions. The
 remote connections can be set up by adding execnet gateways with SSH hostname
