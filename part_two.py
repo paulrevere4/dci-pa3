@@ -2,10 +2,11 @@
 import execnet
 OUTPUT_FILE_NAME = "heat-seq.map"
 
-MAX_X = 12
-MAX_Y = 12
+MAX_X = 120
+MAX_Y = 120
 #NUM_ITERATIONS = 1024
 NUM_ITERATIONS = 1
+NUM_MACHINES = 20
 
 from join import *
 import sys
@@ -65,8 +66,9 @@ def result_printer(grid):
     for x in y:
       f.write("%d\n" % (x))
 
-def iterate(gw, iteration, max_iterations, grid, max_y_arg, max_x_arg):
+def iterate(gws, iteration, max_iterations, grid, max_y_arg, max_x_arg):
   while iteration < max_iterations:
+    gw = gws[iteration % NUM_MACHINES]
     print("Started iteration", iteration)
     # Check if finished
     if iteration == max_iterations:
@@ -99,12 +101,14 @@ def iterate(gw, iteration, max_iterations, grid, max_y_arg, max_x_arg):
 
 if __name__ == "__main__":
   import time
-  gw = execnet.makegateway()
+  gws = []
+  for i in range(NUM_MACHINES):
+    gws.append(execnet.makegateway("ssh=localhost"))
   #TODO: convert pursignal calls to remote_exec calls, return statements become channel.send
   # Spawn/Join on intializer
   #HEAT_GRID = (puresignal(initialize)(HEAT_GRID)).join()
-  HEAT_GRID = (gw.remote_exec(initialize, grid=HEAT_GRID)).receive()
+  HEAT_GRID = (gws[0].remote_exec(initialize, grid=HEAT_GRID)).receive()
   print("Initialized heat grid")
   flush()
   # Spawn calculator
-  iterate(gw, 0, NUM_ITERATIONS, HEAT_GRID, MAX_Y, MAX_X)
+  iterate(gws, 0, NUM_ITERATIONS, HEAT_GRID, MAX_Y, MAX_X)
