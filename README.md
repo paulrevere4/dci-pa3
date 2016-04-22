@@ -47,7 +47,6 @@ the overhead of the execnet library versus the join-python library (which uses
 threading instead of multiprocessing under the hood).
 
 # Analysis of Distributed Computation versus Sequential
-#TODO: "Write an analysis for when you expect a distributed iterative computation to have higher performance than a sequential one (describe assumptions in your analysis: e.g., homogeneous machines and network, data partitioning scheme, and/or computation to communication ratio)."
 
 We expect that a distributed computation will have higher performance than a 
 sequential solution when we have a large number of machines that can communicate
