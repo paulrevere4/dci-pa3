@@ -22,7 +22,7 @@ def initialize(channel, grid):
   for y in range(30, 92):
     grid[y][0] = 100.0
 
-  return grid
+  channel.send(grid)
 
 #@puresignal
 def slave_process(channel, old_grid, x, y):
@@ -65,37 +65,38 @@ def result_printer(grid):
     for x in y:
       f.write("%d\n" % (x))
 
-#@puresignal
-def iterate(iteration, grid):
+def iterate(gw, iteration, grid):
   print("Started iteration", iteration)
   # Check if finished
   if iteration == NUM_ITERATIONS:
     print("DONE")
-    puresignal(result_printer)(grid)
+    puresignal(result_printer)(grid) #TODO: change to remote_exec
     return grid
 
   slaves = []
   #Spawn slave processes with old grid state
   for y in range(MAX_Y):
     for x in range(MAX_X):
-      slave = puresignal(slave_process)(grid, x, y)
+      slave = puresignal(slave_process)(grid, x, y) #TODO: Change this to remote_exec
       slaves.append(slave)
   print("Launched workers. Waiting on results")
   # Update state array
   for i in range(len(slaves)):
     slave = slaves[i]
-    (x,y, val) = slave.join()
+    (x,y, val) = slave.join() #TODO: CHange this to receive
     grid[y][x] = val
-  # Spawn next iteration
-  iterator = puresignal(iterate)(iteration + 1, grid)
-  print("Finished iteration ", iteration)
-  return iterator.join()
+
+  # Run next iteration
+  iterate(iteration + 1, grid)
 
 if __name__ == "__main__":
   import time
+  gw = execnet.makegateway()
+  #TODO: convert pursignal calls to remote_exec calls, return statements become channel.send
   # Spawn/Join on intializer
-  HEAT_GRID = (puresignal(initialize)(HEAT_GRID)).join()
+  #HEAT_GRID = (puresignal(initialize)(HEAT_GRID)).join()
+  HEAT_GRID = (gw.remote_exec(initialize, grid=HEAT_GRID)).receive()
   print("Initialized heat grid")
   flush()
   # Spawn calculator
-  iterator = puresignal(iterate)(0, HEAT_GRID)
+  iterate(gw, 0, HEAT_GRID)
