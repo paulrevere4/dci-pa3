@@ -1,8 +1,8 @@
 # Group Members
 
-William Rory Kronmiller
+William Rory Kronmiller - RCS: kronmw
 
-Paul Revere, IV
+Paul Revere - RCS: reverp
 
 # Running
 
