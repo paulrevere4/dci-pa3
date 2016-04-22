@@ -4,8 +4,7 @@ OUTPUT_FILE_NAME = "heat-seq.map"
 
 MAX_X = 122
 MAX_Y = 122
-#NUM_ITERATIONS = 1024
-NUM_ITERATIONS = 300
+NUM_ITERATIONS = 1024
 
 from join import *
 import sys
@@ -24,37 +23,14 @@ def initialize(grid):
 
   return grid
 
+def array_sum(array):
+  out_sum = 0.0
+  for elem in array:
+    out_sum += float(elem)
+  return out_sum
 #@puresignal
 def slave_process(row, below_row, above_row):
   """Main worker process"""
-  # if x == 0 or y == 0 or x == MAX_X - 1 or y == MAX_Y - 1:
-  #   # Edge squares remain in steady state
-  #   return (x,y, old_grid[y][x])
-
-  # # Get neighbor values
-  # neighbors = [
-  #               old_grid[y-1][x-1], # Top left
-  #               old_grid[y-1][x], # Up one
-  #               old_grid[y][x-1], # Left one
-  #               old_grid[y][x] #Own old value
-  #             ]
-
-  # y_height_okay = False
-  # if (y+1) < len(old_grid):
-  #   y_height_okay = True
-  #   neighbors.append(old_grid[y+1][x]) # Down one
-  # if ((x+1) < len(old_grid[y])):
-  #   neighbors.append(old_grid[y][x+1]) # Right one
-  #   if y_height_okay:
-  #     neighbors.append(old_grid[y+1][x+1]) # Bottom Right
-  #     neighbors.append(old_grid[y+1][x-1]) # Bottom left
-  #     neighbors.append(old_grid[y-1][x+1]) # Top Right
-
-  # # Calculate avg of neighbors and self
-  # new_val = sum(neighbors)/len(neighbors)
-
-  # # Report assigned coordinates and new value
-  # return (x,y, new_val)
   if below_row == [] or above_row == []:
     # row is on an edge, Edge squares remain in steady state
     return row
@@ -70,7 +46,7 @@ def slave_process(row, below_row, above_row):
         neighbors.append(row[i+1])
         neighbors.append(below_row[i])
         neighbors.append(above_row[i])
-        new_val = sum(neighbors)/len(neighbors)
+        new_val = array_sum(neighbors)/float(len(neighbors))
         new_row.append(new_val)
       else:
         #if the cell is on an edge its value stays
@@ -85,9 +61,7 @@ def result_printer(grid):
   f.write("%d %d\n" % (MAX_X, MAX_Y))
   for y in grid:
     for x in y:
-      out_str = "%d"%x
-      f.write(out_str.ljust(4, ' '))
-    f.write("\n")
+      f.write("%.6f\n"%x)
 
 #@puresignal
 def iterate(iteration, grid):
